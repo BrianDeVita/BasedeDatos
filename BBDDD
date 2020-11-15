@@ -1,0 +1,209 @@
+from tkinter import *
+from tkinter import messagebox
+import sqlite3
+#---------Funciones------------
+def acerca():
+    messagebox.showinfo("Acerca de", "Ante cualquier problema comunicarlo")
+
+def licencia ():
+    messagebox.showinfo("Licencia", "Aplicacion Creada por Brian De Vita")
+
+
+def eliminar ():
+    miConexion=sqlite3.connect("Usuarios")
+    miCursor=miConexion.cursor()
+
+    miCursor.execute("DElETE FROM DATOSUSUARIOS WHERE ID="+ miId.get())
+    miConexion.commit()
+    messagebox.showinfo("BBDD", "Registro eliminado con exito")
+
+
+
+def actualizar ():
+    miConexion=sqlite3.connect("Usuarios")
+    miCursor=miConexion.cursor()
+    datos=miNombre.get(), miPas.get(),miApellido.get(),miDireccion.get(),textoComentario.get("1.0", END)
+   #""" miCursor.execute("UPDATE DATOSUSUARIOS SET NOMBRE_USUARIO='"+ miNombre.get()+
+   # "',PASSWORD='"+ miPas.get()+
+    #"',APELLIDO='"+ miApellido.get()+
+    #"',DIRECCION='"+ miDireccion.get()+
+    #"',COMENTARIOS='"+ textoComentario.get("1.0", END)+
+    #"' WHERE ID= " + miId.get())"""
+    miCursor.execute("UPDATE DATOSUSUARIOS SET NOMBRE_USUARIO=?, PASSWORD=?, APELLIDO=?, DIRECCION=?, COMENTARIOS=? " + "WHERE ID=" + miId.get(),(datos))
+    miConexion.commit()
+    messagebox.showinfo("BBDD", "Registro actualizado con exito")
+    
+def leer():
+    miConexion=sqlite3.connect("Usuarios")
+    miCursor=miConexion.cursor()
+
+    miCursor.execute("SELECT * FROM DATOSUSUARIOS WHERE ID="+ miId.get())
+    elUsuario=miCursor.fetchall()
+    for usuario in elUsuario:
+        miId.set(usuario[0])
+        miNombre.set(usuario[1])
+        miPas.set(usuario[2])
+        miDireccion.set(usuario[3])
+        miApellido.set(usuario[4])
+        textoComentario.insert(1.0, usuario[5])
+
+    miConexion.commit()
+
+
+
+def crear():
+    miConexion=sqlite3.connect("Usuarios")
+    miCursor=miConexion.cursor()
+    
+    datos=miNombre.get(), miPas.get(),miApellido.get(),miDireccion.get(),textoComentario.get("1.0", END)
+
+    """miCursor.execute("INSERT INTO DATOSUSUARIOS VALUES(NULL, '" + miNombre.get() +
+        "','"+miPas.get()+ 
+        "','"+miApellido.get()+
+        "','"+miDireccion.get()+
+        "','"+textoComentario.get("1.0", END)+ "')")"""
+    miCursor.execute("INSERT INTO DATOSUSUARIOS VALUES(NULL, ?,?,?,?,?)",(datos))  
+    miConexion.commit()
+    messagebox.showinfo("BBDD", "Registro insertado con exito")
+
+
+def limpiar():
+    miNombre.set("")
+    miId.set("")
+    miApellido.set("")
+    miDireccion.set("")
+    miPas.set("")
+    textoComentario.delete(1.0, END)
+
+
+def salir():
+    valor =messagebox.askquestion("Salir", "¿Seguro que desea salir?")
+    if valor=="yes":
+        root.destroy()
+    
+
+
+def ConexionBBDD():
+    miConexion=sqlite3.connect("Usuarios")
+    miCursor=miConexion.cursor()
+
+    try:  
+        miCursor.execute('''
+            CREATE TABLE DATOSUSUARIOS (
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            NOMBRE_USUARIO VARCHAR(50),
+            PASSWORD VARCHAR(50),
+            APELLIDO VARCHAR (10),
+            DIRECCION VARCHAR(50),
+            COMENTARIOS VARCHAR(100))
+            ''')
+        messagebox.showinfo("BBDD", "BBDD creada con éxito" )
+    except:
+        messagebox.showwarning("Atencion", "La base de datos ya existe")
+
+        
+         
+         
+    
+root=Tk()
+root.title("Base de Datos")
+barraMenu=Menu(root)
+root.config(menu=barraMenu, width=300, height=300, bg="white")
+
+#Declaramos los menus
+bbddMenu=Menu(barraMenu, tearoff=0)
+bbddMenu.add_command(label="Conectar", command=ConexionBBDD)
+bbddMenu.add_command(label="Salir", command=salir)
+
+
+borrarMenu=Menu(barraMenu, tearoff=0)
+borrarMenu.add_command(label="Borrar campos", command=limpiar)
+
+crudMenu=Menu(barraMenu, tearoff=0)
+crudMenu.add_command(label="Crear", command=crear)
+crudMenu.add_command(label="Leer", comman=leer)
+crudMenu.add_command(label="Actualizar", comman=actualizar)
+crudMenu.add_command(label="Borrar", comman=eliminar)
+
+ayudaMenu=Menu(barraMenu, tearoff=0)
+ayudaMenu.add_command(label="Licencia", comman=licencia)
+ayudaMenu.add_command(label="Acerca de..", comman=acerca)
+
+#Agregarlos a la barra
+barraMenu.add_cascade(label="BBDD", menu=bbddMenu)
+barraMenu.add_cascade(label="Borrar", menu=borrarMenu)
+barraMenu.add_cascade(label="CRUD", menu=crudMenu)
+barraMenu.add_cascade(label="Ayuda", menu=ayudaMenu)
+
+#Comienzo de campos 
+
+miFrame=Frame(root, bg="white")
+miFrame.pack()
+
+miId=StringVar()
+miNombre=StringVar()
+miApellido=StringVar()
+miPas=StringVar()
+miDireccion=StringVar()
+
+cuadroID=Entry(miFrame, textvariable=miId)
+cuadroID.grid(row=0, column=1, padx=10, pady=10)
+
+nombre=Entry(miFrame,textvariable=miNombre)
+nombre.grid(row=1, column=1, padx=10, pady=10)
+
+apellido=Entry(miFrame,textvariable=miApellido)
+apellido.grid(row=2, column=1, padx=10, pady=10)
+
+password=Entry(miFrame,textvariable=miPas)
+password.grid(row=3, column=1, padx=10, pady=10)
+password.config(show="*")
+
+direccion=Entry(miFrame,textvariable=miDireccion)
+direccion.grid(row=4, column=1, padx=10, pady=10)
+
+#Caja de texto
+textoComentario=Text(miFrame, width=16, height=5)
+textoComentario.grid(row=5, column=1, padx=10, pady=10)
+scrollVert=Scrollbar(miFrame, command=textoComentario.yview)
+scrollVert.grid(row=5, column=2, sticky="nsew")
+textoComentario.config(yscrollcommand=scrollVert)
+
+#--------Comienzo de Label------------
+idLabel=Label(miFrame, text="ID:", font="Courier", relief="groove")
+idLabel.grid(row=0, column=0)
+
+nombreLabel=Label(miFrame, text="Nombre:", font="Courier", relief="groove")
+nombreLabel.grid(row=1, column=0)
+
+apellidoLabel=Label(miFrame, text="Apellido:", font="Courier", relief="groove")
+apellidoLabel.grid(row=2, column=0)
+
+passwordLabel=Label(miFrame, text="Password", font="Courier", relief="groove")
+passwordLabel.grid(row=3, column=0)
+
+direccionLabel=Label(miFrame, text="Direccion:", font="Courier", relief="groove")
+direccionLabel.grid(row=4, column=0)
+
+cuadroTextLabel=Label(miFrame, text="Comentario", font="Courier", relief="groove")
+cuadroTextLabel.grid(row=5, column=0)
+
+#----FRAME PARTE INFERIOR-----
+
+miFrame2=Frame(root, bg="gray")
+miFrame2.pack()
+
+botoncrear=Button(miFrame2, text="Create", font="Courier",relief="groove",command=crear)
+botoncrear.grid(row=1, column=0, sticky="e", padx=10, pady=10)
+
+botonleer=Button(miFrame2, text="Read", font="Courier", relief="groove",comman=leer)
+botonleer.grid(row=1, column=1, sticky="e", padx=10, pady=10)
+
+botonActu=Button(miFrame2, text="Update",font="Courier",relief="groove", command=actualizar)
+botonActu.grid(row=1, column=2, sticky="e", padx=10, pady=10)
+
+botoneliminar=Button(miFrame2, text="Delete",font="Courier",relief="groove",comman=eliminar)
+botoneliminar.grid(row=1, column=3,sticky="e",padx=10, pady=10)
+
+
+root.mainloop()
